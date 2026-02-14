@@ -6,32 +6,42 @@ import {
   Text,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { searchSongs } from "../api/saavnApi";
 import { useDispatch } from "react-redux";
 import { setQueue, playSong } from "../store/playerSlice";
 import { loadAndPlay } from "../services/audioService";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const [query, setQuery] = useState("");
-  const [songs, setSongs] = useState([]);
-  const dispatch = useDispatch();
+  const [songs, setSongs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
-    const results = await searchSongs(query);
-    setSongs(results);
-    dispatch(setQueue(results));
-  };
+  const dispatch = useDispatch();
 
   const handlePlay = async (song: any, index: number) => {
     dispatch(playSong({ song, index }));
     await loadAndPlay(song.url);
   };
 
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+
+    setLoading(true);
+    const results = await searchSongs(query);
+    setSongs(results);
+    dispatch(setQueue(results));
+    setLoading(false);
+  };
+
   return (
-    <View style={{ padding: 20, marginTop: 50 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#121212", padding: 15 }}>
+      
       <TextInput
         placeholder="Search songs..."
+        placeholderTextColor="#888"
         value={query}
         onChangeText={setQuery}
         onSubmitEditing={handleSearch}
@@ -43,25 +53,37 @@ export default function HomeScreen() {
         }}
       />
 
+      {loading && (
+        <ActivityIndicator size="large" color="#1DB954" />
+      )}
+
       <FlatList
         data={songs}
         keyExtractor={(item: any) => item.id}
         renderItem={({ item, index }: any) => (
           <TouchableOpacity
             onPress={() => handlePlay(item, index)}
-            style={{ flexDirection: "row", marginBottom: 15 }}
+            style={{
+              flexDirection: "row",
+              marginBottom: 15,
+              alignItems: "center",
+            }}
           >
             <Image
               source={{ uri: item.image }}
               style={{ width: 60, height: 60, borderRadius: 10 }}
             />
             <View style={{ marginLeft: 10 }}>
-              <Text style={{ fontWeight: "bold" }}>{item.name}</Text>
-              <Text>{item.artist}</Text>
+              <Text style={{ color: "white", fontWeight: "bold" }}>
+                {item.name}
+              </Text>
+              <Text style={{ color: "gray" }}>
+                {item.artist}
+              </Text>
             </View>
           </TouchableOpacity>
         )}
       />
-    </View>
+    </SafeAreaView>
   );
 }

@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 export interface Song {
   id: string;
   name: string;
@@ -88,6 +87,11 @@ const playerSlice = createSlice({
     },
   },
 });
+
+export const loadQueueFromStorage = async () => {
+  const data = await AsyncStorage.getItem("queue");
+  return data ? JSON.parse(data) : [];
+};
 
 export const {
   setQueue,
